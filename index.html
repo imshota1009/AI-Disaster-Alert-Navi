@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-lang-key="pageTitle">「もしも」の備えアプリ v2.1 - AI防災情報ナビ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', 'Noto Sans JP', 'Noto Sans KR', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .tab-button.active {
+            border-color: #ef4444;
+            background-color: #ef4444;
+            color: white;
+        }
+        .lang-btn {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border: 1px solid transparent;
+        }
+        .lang-btn.active {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        .lang-btn:not(.active) {
+            background-color: #e5e7eb;
+            color: #4b5563;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div class="container mx-auto max-w-lg p-4 min-h-screen bg-white shadow-lg">
+
+        <!-- Header -->
+        <header class="relative text-center py-4 border-b-2 border-gray-200">
+            <h1 class="text-2xl font-bold text-gray-800" data-lang-key="appTitle">「もしも」の備えアプリ</h1>
+            <p class="text-sm text-gray-500" data-lang-key="appSubtitle">AIが、あなたと大切な人を守る情報を届けます</p>
+            <!-- Language Switcher -->
+            <div id="lang-switcher" class="absolute top-2 right-2 flex space-x-1">
+                <button class="lang-btn" data-lang="ja">JP</button>
+                <button class="lang-btn" data-lang="en">EN</button>
+                <button class="lang-btn" data-lang="ko">KR</button>
+                <button class="lang-btn" data-lang="zh">CN</button>
+            </div>
+        </header>
+
+        <!-- Tab Navigation -->
+        <nav class="flex justify-around my-4">
+            <button id="tab-alert" class="tab-button active flex-1 py-2 px-4 text-center font-semibold border-b-4 transition" data-lang-key="tabAlert">災害速報</button>
+            <button id="tab-finder" class="tab-button flex-1 py-2 px-4 text-center font-semibold border-b-4 border-transparent text-gray-500 transition" data-lang-key="tabFinder">避難場所</button>
+            <button id="tab-checklist" class="tab-button flex-1 py-2 px-4 text-center font-semibold border-b-4 border-transparent text-gray-500 transition" data-lang-key="tabChecklist">チェックリスト</button>
+        </nav>
+
+        <!-- Main Content -->
+        <main id="content">
+            <!-- AI Disaster Alert Page -->
+            <div id="page-alert">
+                 <div class="bg-red-50 border-l-4 border-red-500 text-red-800 p-4" role="alert">
+                    <p class="font-bold" data-lang-key="alertInfoTitle">災害情報</p>
+                    <p data-lang-key="alertInfoDesc">AIが最新の防災情報を分析し、取るべき行動を多言語でお知らせします。</p>
+                </div>
+                <div class="mt-6 text-center">
+                    <button id="getAlertsBtn" class="w-full max-w-xs bg-red-600 text-white font-bold py-4 px-6 rounded-lg shadow-md hover:bg-red-700 transition-transform transform active:scale-95 text-lg">
+                        <span data-lang-key="getAlertsBtn">最新情報を取得</span>
+                    </button>
+                </div>
+                 <!-- Status/Result Area -->
+                <div id="alert-status" class="mt-6 text-center text-gray-600"></div>
+                <div id="alert-loader" class="hidden mx-auto mt-6 loader"></div>
+                <div id="alert-results" class="mt-4 space-y-4"></div>
+            </div>
+
+            <!-- Shelter Finder Page -->
+            <div id="page-finder" class="hidden">
+                 <div class="bg-blue-50 border-l-4 border-blue-500 text-blue-800 p-4">
+                    <p class="font-bold" data-lang-key="finderInfoTitle">避難場所を探す</p>
+                    <p data-lang-key="finderInfoDesc">現在地から最も近い避難場所を検索します。</p>
+                </div>
+                <div class="mt-6 text-center">
+                    <button id="findSheltersBtn" class="w-full max-w-xs bg-blue-600 text-white font-bold py-4 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-transform transform active:scale-95 text-lg">
+                        <span data-lang-key="findSheltersBtn">検索開始</span>
+                    </button>
+                </div>
+                <div id="shelter-status" class="mt-6 text-center text-gray-600"></div>
+                <div id="shelter-loader" class="hidden mx-auto mt-6 loader"></div>
+                <div id="shelter-results" class="mt-4 space-y-3"></div>
+            </div>
+
+            <!-- Checklist Page -->
+            <div id="page-checklist" class="hidden">
+                 <div class="bg-yellow-50 border-l-4 border-yellow-500 text-yellow-800 p-4">
+                    <p class="font-bold" data-lang-key="checklistInfoTitle">防災チェックリスト</p>
+                    <p data-lang-key="checklistInfoDesc">災害はいつ起こるか分かりません。日頃から準備をしておきましょう。</p>
+                </div>
+                <div id="checklist-container" class="mt-4 space-y-4 text-sm">
+                    <!-- Checklist content will be dynamically inserted here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const contentPages = { alert: document.getElementById('page-alert'), finder: document.getElementById('page-finder'), checklist: document.getElementById('page-checklist') };
+        const tabButtons = { alert: document.getElementById('tab-alert'), finder: document.getElementById('tab-finder'), checklist: document.getElementById('tab-checklist') };
+        const getAlertsBtn = document.getElementById('getAlertsBtn');
+        const alertStatus = document.getElementById('alert-status');
+        const alertLoader = document.getElementById('alert-loader');
+        const alertResults = document.getElementById('alert-results');
+        const findSheltersBtn = document.getElementById('findSheltersBtn');
+        const shelterStatus = document.getElementById('shelter-status');
+        const shelterLoader = document.getElementById('shelter-loader');
+        const shelterResults = document.getElementById('shelter-results');
+        const checklistContainer = document.getElementById('checklist-container');
+        const langSwitcher = document.getElementById('lang-switcher');
+
+        // --- Data ---
+        const shelters = [
+            { name: "習志野市立第一中学校", address: "千葉県習志野市泉町1-1-1", lat: 35.6853, lon: 140.0345, type: "学校" },
+            { name: "津田沼公民館", address: "千葉県習志но市津田沼4-2-5", lat: 35.6920, lon: 140.0210, type: "公民館" },
+            { name: "袖ケ浦東小学校", address: "千葉県習志野市袖ケ浦3-5-1", lat: 35.6698, lon: 140.0401, type: "学校" },
+        ];
+        
+        const checklistData = {
+            emergencyBag: ["water", "food", "valuables", "firstAid", "radio", "flashlight", "clothing", "gloves", "toilet"],
+            homeStockpile: ["foodAndWater3Days", "stove", "waterForLife", "secureFurniture"]
+        };
+
+        const translations = {
+            ja: {
+                pageTitle: "「もしも」の備えアプリ v2.1 - AI防災情報ナビ",
+                appTitle: "「もしも」の備えアプリ",
+                appSubtitle: "AIが、あなたと大切な人を守る情報を届けます",
+                tabAlert: "災害速報",
+                tabFinder: "避難場所",
+                tabChecklist: "チェックリスト",
+                alertInfoTitle: "災害情報",
+                alertInfoDesc: "AIが最新の防災情報を分析し、取るべき行動を多言語でお知らせします。",
+                getAlertsBtn: "最新情報を取得",
+                finderInfoTitle: "避難場所を探す",
+                finderInfoDesc: "現在地から最も近い避難場所を検索します。",
+                findSheltersBtn: "検索開始",
+                checklistInfoTitle: "防災チェックリスト",
+                checklistInfoDesc: "災害はいつ起こるか分かりません。日頃から準備をしておきましょう。",
+                // Status messages
+                gettingLocation: "位置情報を取得しています...",
+                findingShelters: "近くの避難場所を検索しています...",
+                searchComplete: "検索が完了しました。",
+                locationPermissionError: "位置情報の利用を許可してください。",
+                gettingAlerts: "最新の災害情報を取得しています...",
+                alertsUpdated: "情報を更新しました。",
+                alertsError: "情報取得に失敗しました。",
+                distance: "現在地からの距離:",
+                shelterTypeSchool: "学校",
+                shelterTypeHall: "公民館",
+                openMap: "地図で開く",
+                // Checklist
+                emergencyBag: "非常用持ち出し袋",
+                water: "飲料水（1人1日3リットルが目安）",
+                food: "食料品（カップ麺、缶詰など）",
+                valuables: "貴重品（現金、保険証など）",
+                firstAid: "救急用品",
+                radio: "携帯ラジオ、予備電池",
+                flashlight: "懐中電灯",
+                clothing: "衣類、下着",
+                gloves: "軍手、マスク",
+                toilet: "携帯トイレ",
+                homeStockpile: "自宅での備蓄",
+                foodAndWater3Days: "最低3日分（できれば1週間分）の食料と水",
+                stove: "カセットコンロ、ガスボンベ",
+                waterForLife: "生活用水（お風呂の水をためておくなど）",
+                secureFurniture: "家具の固定、ガラス飛散防止フィルム"
+            },
+            en: {
+                pageTitle: "Moshimo Sonae App v2.1 - AI Disaster Info Navi",
+                appTitle: "Disaster Preparedness App",
+                appSubtitle: "AI delivers information to protect you and your loved ones",
+                tabAlert: "Disaster Alert",
+                tabFinder: "Shelters",
+                tabChecklist: "Checklist",
+                alertInfoTitle: "Disaster Information",
+                alertInfoDesc: "AI analyzes the latest disaster information and notifies you of actions to take in multiple languages.",
+                getAlertsBtn: "Get Latest Info",
+                finderInfoTitle: "Find Shelters",
+                finderInfoDesc: "Finds the nearest evacuation shelters from your current location.",
+                findSheltersBtn: "Start Search",
+                checklistInfoTitle: "Disaster Checklist",
+                checklistInfoDesc: "Disasters can happen at any time. Let's be prepared.",
+                gettingLocation: "Getting location...",
+                findingShelters: "Searching for nearby shelters...",
+                searchComplete: "Search complete.",
+                locationPermissionError: "Please allow access to your location.",
+                gettingAlerts: "Getting latest disaster info...",
+                alertsUpdated: "Information updated.",
+                alertsError: "Failed to retrieve information.",
+                distance: "Distance from current location:",
+                shelterTypeSchool: "School",
+                shelterTypeHall: "Community Center",
+                openMap: "Open in Maps",
+                emergencyBag: "Emergency Go-Bag",
+                water: "Drinking water (Guideline: 3L/person/day)",
+                food: "Emergency food (Cup noodles, cans, etc.)",
+                valuables: "Valuables (Cash, insurance card, etc.)",
+                firstAid: "First-aid kit",
+                radio: "Portable radio, spare batteries",
+                flashlight: "Flashlight",
+                clothing: "Clothes, underwear",
+                gloves: "Work gloves, masks",
+                toilet: "Portable toilet",
+                homeStockpile: "Home Stockpile",
+                foodAndWater3Days: "Food & water for at least 3 days (1 week recommended)",
+                stove: "Portable stove, gas canisters",
+                waterForLife: "Utility water (e.g., store water in bathtub)",
+                secureFurniture: "Secure furniture, shatterproof film for windows"
+            },
+            ko: {
+                pageTitle: "혹시 모를 대비 앱 v2.1 - AI 재난 정보 내비",
+                appTitle: "재난 대비 앱",
+                appSubtitle: "AI가 당신과 소중한 사람을 지키기 위한 정보를 전달합니다",
+                tabAlert: "재난 속보",
+                tabFinder: "대피소",
+                tabChecklist: "체크리스트",
+                alertInfoTitle: "재난 정보",
+                alertInfoDesc: "AI가 최신 재난 정보를 분석하여 취해야 할 행동을 다국어로 알려드립니다.",
+                getAlertsBtn: "최신 정보 얻기",
+                finderInfoTitle: "대피소 찾기",
+                finderInfoDesc: "현재 위치에서 가장 가까운 대피소를 검색합니다.",
+                findSheltersBtn: "검색 시작",
+                checklistInfoTitle: "재난 대비 체크리스트",
+                checklistInfoDesc: "재난은 언제 일어날지 모릅니다. 평소에 준비해 둡시다.",
+                gettingLocation: "위치 정보를 가져오는 중...",
+                findingShelters: "가까운 대피소를 검색하는 중...",
+                searchComplete: "검색이 완료되었습니다.",
+                locationPermissionError: "위치 정보 이용을 허용해 주세요.",
+                gettingAlerts: "최신 재해 정보를 가져오는 중...",
+                alertsUpdated: "정보가 업데이트되었습니다.",
+                alertsError: "정보를 가져오지 못했습니다.",
+                distance: "현재 위치로부터의 거리:",
+                shelterTypeSchool: "학교",
+                shelterTypeHall: "공민관",
+                openMap: "지도로 열기",
+                emergencyBag: "비상용 배낭",
+                water: "식수 (1인당 하루 3리터 기준)",
+                food: "비상식량 (컵라면, 통조림 등)",
+                valuables: "귀중품 (현금, 보험증 등)",
+                firstAid: "구급용품",
+                radio: "휴대용 라디오, 예비 건전지",
+                flashlight: "손전등",
+                clothing: "의류, 속옷",
+                gloves: "작업용 장갑, 마스크",
+                toilet: "휴대용 화장실",
+                homeStockpile: "가정 비축품",
+                foodAndWater3Days: "최소 3일분(가능하면 1주일분)의 식량과 물",
+                stove: "휴대용 가스레인지, 가스통",
+                waterForLife: "생활용수 (욕조에 물을 받아두는 등)",
+                secureFurniture: "가구 고정, 유리 비산 방지 필름"
+            },
+            zh: {
+                pageTitle: "防灾应用 v2.1 - AI防灾信息导航",
+                appTitle: "防灾应用",
+                appSubtitle: "AI提供信息以保护您和您所爱的人",
+                tabAlert: "灾害速报",
+                tabFinder: "避难所",
+                tabChecklist: "清单",
+                alertInfoTitle: "灾害信息",
+                alertInfoDesc: "AI会分析最新的防灾信息，并以多种语言通知您应采取的行动。",
+                getAlertsBtn: "获取最新信息",
+                finderInfoTitle: "寻找避难所",
+                finderInfoDesc: "从您当前位置搜索最近的避难所。",
+                findSheltersBtn: "开始搜索",
+                checklistInfoTitle: "防灾清单",
+                checklistInfoDesc: "灾难随时可能发生。让我们做好准备。",
+                gettingLocation: "正在获取位置信息...",
+                findingShelters: "正在搜索附近的避难所...",
+                searchComplete: "搜索完成。",
+                locationPermissionError: "请允许使用您的位置信息。",
+                gettingAlerts: "正在获取最新的灾情信息...",
+                alertsUpdated: "信息已更新。",
+                alertsError: "未能检索到信息。",
+                distance: "距当前位置的距离:",
+                shelterTypeSchool: "学校",
+                shelterTypeHall: "公民馆",
+                openMap: "在地图中打开",
+                emergencyBag: "应急包",
+                water: "饮用水（标准：每人每天3升）",
+                food: "应急食品（方便面、罐头等）",
+                valuables: "贵重物品（现金、保险卡等）",
+                firstAid: "急救用品",
+                radio: "便携式收音机、备用电池",
+                flashlight: "手电筒",
+                clothing: "衣物、内衣",
+                gloves: "工作手套、口罩",
+                toilet: "便携式厕所",
+                homeStockpile: "家庭储备",
+                foodAndWater3Days: "至少3天（最好1周）的食物和水",
+                stove: "便携式炉灶、燃气罐",
+                waterForLife: "生活用水（例如，在浴缸中存水）",
+                secureFurniture: "固定家具、窗户防碎膜"
+            }
+        };
+
+        let currentLanguage = 'ja';
+
+        // --- Event Listeners ---
+        Object.keys(tabButtons).forEach(key => tabButtons[key].addEventListener('click', () => switchTab(key)));
+        getAlertsBtn.addEventListener('click', fetchDisasterInfo);
+        findSheltersBtn.addEventListener('click', getUserLocation);
+        langSwitcher.addEventListener('click', (e) => {
+            if (e.target.matches('[data-lang]')) {
+                const lang = e.target.getAttribute('data-lang');
+                changeLanguage(lang);
+            }
+        });
+        document.addEventListener('DOMContentLoaded', initializeApp);
+
+
+        // --- Functions ---
+        
+        function changeLanguage(lang) {
+            if (!translations[lang]) return;
+            currentLanguage = lang;
+            localStorage.setItem('appLanguage', lang);
+            document.documentElement.lang = lang;
+
+            // Update all elements with data-lang-key
+            document.querySelectorAll('[data-lang-key]').forEach(el => {
+                const key = el.getAttribute('data-lang-key');
+                el.textContent = translations[lang][key] || el.textContent;
+            });
+            
+            // Update active lang button
+             langSwitcher.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
+            });
+
+            // Re-render checklist with new language
+            renderChecklist();
+        }
+
+        function renderChecklist() {
+            let checklistHTML = '';
+            const langDict = translations[currentLanguage];
+            for (const categoryKey in checklistData) {
+                checklistHTML += `<h3 class="font-bold text-lg text-gray-700 border-b pb-2 mb-2">${langDict[categoryKey]}</h3><ul class="list-disc list-inside space-y-1 text-gray-600">`;
+                checklistData[categoryKey].forEach(itemKey => {
+                    checklistHTML += `<li>${langDict[itemKey]}</li>`;
+                });
+                checklistHTML += `</ul>`;
+            }
+            checklistContainer.innerHTML = checklistHTML;
+        }
+
+        function initializeApp() {
+            const savedLang = localStorage.getItem('appLanguage') || 'ja';
+            changeLanguage(savedLang);
+        }
+
+        function switchTab(tabKey) {
+            Object.keys(contentPages).forEach(key => {
+                const isSelected = key === tabKey;
+                contentPages[key].classList.toggle('hidden', !isSelected);
+                tabButtons[key].classList.toggle('active', isSelected);
+                if (!isSelected) tabButtons[key].classList.remove('active');
+            });
+        }
+        
+        // --- AI Disaster Alert Functions ---
+        async function fetchDisasterInfo() {
+            alertStatus.textContent = translations[currentLanguage].gettingAlerts;
+            alertLoader.classList.remove('hidden');
+            alertResults.innerHTML = '';
+            getAlertsBtn.disabled = true;
+
+            const disasterData = {
+                type: "Typhoon Information",
+                area: "Chiba Prefecture, Narashino City",
+                headline: "Typhoon No. 10 approaching. Issued heavy rain and strong wind warning.",
+                details: "Typhoon No. 10 is expected to make landfall in Chiba Prefecture tomorrow morning. Expected maximum wind speed is 40m/s. Total rainfall may exceed 200mm. Please be cautious of landslides, river flooding, and strong winds. Avoid going outdoors unnecessarily."
+            };
+            
+            const prompt = `You are an emergency disaster information announcer. Analyze the following disaster information and summarize the "Situation" and "Recommended Actions" very concisely and clearly in 4 languages (日本語, English, 中文(简体), 한국어) so that everyone, including foreigners, can understand.
+# Constraints
+- For each language, you MUST include "Situation" and "Recommended Actions".
+- Use bullet points and simple words.
+- Avoid technical terms.
+- The heading for each language must be "【Language Name】". Example: 【日本語】
+# Original Data
+- Disaster Type: ${disasterData.type}
+- Area: ${disasterData.area}
+- Headline: ${disasterData.headline}
+- Details: ${disasterData.details}`;
+
+            try {
+                const apiKey = ""; 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                const payload = { contents: [{ parts: [{ text: prompt }] }] };
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                const result = await response.json();
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!text) throw new Error("No response from AI.");
+                displayDisasterInfo(text);
+                alertStatus.textContent = translations[currentLanguage].alertsUpdated;
+            } catch (error) {
+                console.error("Error fetching AI response:", error);
+                alertStatus.textContent = translations[currentLanguage].alertsError;
+                alertResults.innerHTML = `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert"><strong>Error:</strong><span class="block sm:inline">${error.message}</span></div>`;
+            } finally {
+                alertLoader.classList.add('hidden');
+                getAlertsBtn.disabled = false;
+            }
+        }
+
+        function displayDisasterInfo(text) {
+            alertResults.innerHTML = '';
+            const languages = text.split('【').slice(1);
+            languages.forEach(langBlock => {
+                const parts = langBlock.split('】');
+                const langName = parts[0];
+                let content = parts[1].trim();
+                content = content.replace(/状況:|Situation:|상황:|情况:/g, '<p class="font-bold mt-2">$&</p>')
+                                 .replace(/推奨される行動:|Recommended Actions:|권장 조치:|推荐行动:/g, '<p class="font-bold mt-2">$&</p>')
+                                 .replace(/\*/g, '•').replace(/\n/g, '<br>');
+                const card = document.createElement('div');
+                card.className = 'border rounded-lg p-4 bg-white shadow';
+                card.innerHTML = `<h3 class="font-bold text-xl text-gray-800">${langName}</h3><div class="mt-2 text-gray-700">${content}</div>`;
+                alertResults.appendChild(card);
+            });
+        }
+
+        // --- Shelter Finder Functions ---
+        function getUserLocation() {
+            shelterStatus.textContent = translations[currentLanguage].gettingLocation;
+            shelterLoader.classList.remove('hidden');
+            shelterResults.innerHTML = '';
+            findSheltersBtn.disabled = true;
+            navigator.geolocation.getCurrentPosition(
+                (pos) => findNearestShelters(pos.coords.latitude, pos.coords.longitude),
+                () => {
+                    shelterStatus.textContent = translations[currentLanguage].locationPermissionError;
+                    shelterLoader.classList.add('hidden');
+                    findSheltersBtn.disabled = false;
+                }
+            );
+        }
+        
+        function findNearestShelters(userLat, userLon) {
+            shelterStatus.textContent = translations[currentLanguage].findingShelters;
+            const sheltersWithDistance = shelters.map(s => ({...s, distance: calculateDistance(userLat, userLon, s.lat, s.lon)})).sort((a, b) => a.distance - b.distance);
+            displayShelterResults(sheltersWithDistance);
+            shelterLoader.classList.add('hidden');
+            shelterStatus.textContent = translations[currentLanguage].searchComplete;
+            findSheltersBtn.disabled = false;
+        }
+
+        function displayShelterResults(sortedShelters) {
+            shelterResults.innerHTML = '';
+            sortedShelters.slice(0, 5).forEach(shelter => {
+                const card = document.createElement('div');
+                card.className = 'border rounded-lg p-4 bg-white shadow';
+                const distanceText = shelter.distance < 1 ? `${Math.round(shelter.distance * 1000)}m` : `${shelter.distance.toFixed(1)}km`;
+                const typeText = shelter.type === "学校" ? translations[currentLanguage].shelterTypeSchool : translations[currentLanguage].shelterTypeHall;
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-bold text-lg text-gray-800">${shelter.name}</h3>
+                            <p class="text-sm text-gray-500">${shelter.address}</p>
+                            <p class="text-sm text-gray-700 mt-1">${translations[currentLanguage].distance} <span class="font-bold">${distanceText}</span></p>
+                        </div>
+                        <span class="text-xs font-semibold bg-gray-200 text-gray-700 px-2 py-1 rounded-full whitespace-nowrap">${typeText}</span>
+                    </div>
+                    <div class="mt-3">
+                        <a href="https://www.google.com/maps?q=${shelter.lat},${shelter.lon}" target="_blank" rel="noopener noreferrer" class="block text-center w-full bg-green-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-700 transition">
+                           ${translations[currentLanguage].openMap}
+                        </a>
+                    </div>`;
+                shelterResults.appendChild(card);
+            });
+        }
+        
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // km
+            const dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+        }
+    </script>
+</body>
+</html>
+
