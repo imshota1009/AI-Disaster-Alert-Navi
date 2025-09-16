@@ -28,24 +28,6 @@
             background-color: #ef4444;
             color: white;
         }
-        .lang-btn {
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            border: 1px solid transparent;
-        }
-        .lang-btn.active {
-            background-color: #3b82f6;
-            color: white;
-            border-color: #3b82f6;
-        }
-        .lang-btn:not(.active) {
-            background-color: #e5e7eb;
-            color: #4b5563;
-        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -57,11 +39,24 @@
             <h1 class="text-2xl font-bold text-gray-800" data-lang-key="appTitle">「もしも」の備えアプリ</h1>
             <p class="text-sm text-gray-500" data-lang-key="appSubtitle">AIが、あなたと大切な人を守る情報を届けます</p>
             <!-- Language Switcher -->
-            <div id="lang-switcher" class="absolute top-2 right-2 flex space-x-1">
-                <button class="lang-btn" data-lang="ja">JP</button>
-                <button class="lang-btn" data-lang="en">EN</button>
-                <button class="lang-btn" data-lang="ko">KR</button>
-                <button class="lang-btn" data-lang="zh">CN</button>
+            <div class="absolute top-4 right-4">
+                <div class="relative" id="lang-switcher-container">
+                    <button id="current-lang-btn" class="flex items-center space-x-2 bg-gray-100 px-3 py-1.5 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706C6.512 5.73 6.974 6 7.5 6A1.5 1.5 0 019 7.5V8a2 2 0 004 0 2 2 0 011.523-1.943A5.998 5.998 0 0116 10c0 .34-.028.675-.083 1H4.083A5.996 5.996 0 014 10c0-.339.028-.676.083-1.001a6.009 6.009 0 01.249-1.028zM8 12a2 2 0 11-4 0 2 2 0 014 0zm6 0a2 2 0 11-4 0 2 2 0 014 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span id="current-lang-text" class="w-4">JP</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                    </button>
+                    <div id="lang-dropdown" class="hidden absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-20 ring-1 ring-black ring-opacity-5">
+                        <div class="py-1">
+                            <a href="#" class="lang-option block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="ja">日本語 (JP)</a>
+                            <a href="#" class="lang-option block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="en">English (EN)</a>
+                            <a href="#" class="lang-option block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="ko">한국어 (KR)</a>
+                            <a href="#" class="lang-option block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="zh">中文(简体) (CN)</a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </header>
 
@@ -133,7 +128,10 @@
         const shelterLoader = document.getElementById('shelter-loader');
         const shelterResults = document.getElementById('shelter-results');
         const checklistContainer = document.getElementById('checklist-container');
-        const langSwitcher = document.getElementById('lang-switcher');
+        const langSwitcherContainer = document.getElementById('lang-switcher-container');
+        const currentLangBtn = document.getElementById('current-lang-btn');
+        const currentLangText = document.getElementById('current-lang-text');
+        const langDropdown = document.getElementById('lang-dropdown');
 
         // --- Data ---
         const shelters = [
@@ -326,10 +324,23 @@
         Object.keys(tabButtons).forEach(key => tabButtons[key].addEventListener('click', () => switchTab(key)));
         getAlertsBtn.addEventListener('click', fetchDisasterInfo);
         findSheltersBtn.addEventListener('click', getUserLocation);
-        langSwitcher.addEventListener('click', (e) => {
-            if (e.target.matches('[data-lang]')) {
+        currentLangBtn.addEventListener('click', () => {
+            langDropdown.classList.toggle('hidden');
+        });
+
+        langDropdown.addEventListener('click', e => {
+            e.preventDefault();
+            if (e.target.matches('.lang-option')) {
                 const lang = e.target.getAttribute('data-lang');
                 changeLanguage(lang);
+                langDropdown.classList.add('hidden');
+            }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', e => {
+            if (!langSwitcherContainer.contains(e.target)) {
+                langDropdown.classList.add('hidden');
             }
         });
         document.addEventListener('DOMContentLoaded', initializeApp);
@@ -349,10 +360,8 @@
                 el.textContent = translations[lang][key] || el.textContent;
             });
             
-            // Update active lang button
-             langSwitcher.querySelectorAll('.lang-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
-            });
+            // Update language button text
+            currentLangText.textContent = lang.toUpperCase();
 
             // Re-render checklist with new language
             renderChecklist();
@@ -399,12 +408,15 @@
                 details: "Typhoon No. 10 is expected to make landfall in Chiba Prefecture tomorrow morning. Expected maximum wind speed is 40m/s. Total rainfall may exceed 200mm. Please be cautious of landslides, river flooding, and strong winds. Avoid going outdoors unnecessarily."
             };
             
-            const prompt = `You are an emergency disaster information announcer. Analyze the following disaster information and summarize the "Situation" and "Recommended Actions" very concisely and clearly in 4 languages (日本語, English, 中文(简体), 한국어) so that everyone, including foreigners, can understand.
+            const langMap = { ja: '日本語', en: 'English', ko: '한국어', zh: '中文(简体)' };
+            const targetLanguage = langMap[currentLanguage];
+
+            const prompt = `You are an emergency disaster information announcer. Analyze the following disaster information and summarize the "Situation" and "Recommended Actions" very concisely and clearly ONLY in ${targetLanguage} so that everyone can understand.
 # Constraints
-- For each language, you MUST include "Situation" and "Recommended Actions".
+- You MUST include "Situation" and "Recommended Actions" headings in ${targetLanguage}.
 - Use bullet points and simple words.
 - Avoid technical terms.
-- The heading for each language must be "【Language Name】". Example: 【日本語】
+- Do not add any other text, greetings, or language headers like "【${targetLanguage}】". Respond directly with the summary.
 # Original Data
 - Disaster Type: ${disasterData.type}
 - Area: ${disasterData.area}
@@ -434,19 +446,15 @@
 
         function displayDisasterInfo(text) {
             alertResults.innerHTML = '';
-            const languages = text.split('【').slice(1);
-            languages.forEach(langBlock => {
-                const parts = langBlock.split('】');
-                const langName = parts[0];
-                let content = parts[1].trim();
-                content = content.replace(/状況:|Situation:|상황:|情况:/g, '<p class="font-bold mt-2">$&</p>')
-                                 .replace(/推奨される行動:|Recommended Actions:|권장 조치:|推荐行动:/g, '<p class="font-bold mt-2">$&</p>')
-                                 .replace(/\*/g, '•').replace(/\n/g, '<br>');
-                const card = document.createElement('div');
-                card.className = 'border rounded-lg p-4 bg-white shadow';
-                card.innerHTML = `<h3 class="font-bold text-xl text-gray-800">${langName}</h3><div class="mt-2 text-gray-700">${content}</div>`;
-                alertResults.appendChild(card);
-            });
+            let content = text.trim();
+            content = content.replace(/状況:|Situation:|상황:|情况:/g, '<p class="font-bold mt-2">$&</p>')
+                             .replace(/推奨される行動:|Recommended Actions:|권장 조치:|推荐行动:/g, '<p class="font-bold mt-2">$&</p>')
+                             .replace(/\*/g, '•').replace(/\n/g, '<br>');
+            
+            const card = document.createElement('div');
+            card.className = 'border rounded-lg p-4 bg-white shadow';
+            card.innerHTML = `<div class="mt-2 text-gray-700">${content}</div>`;
+            alertResults.appendChild(card);
         }
 
         // --- Shelter Finder Functions ---
@@ -508,4 +516,6 @@
     </script>
 </body>
 </html>
+
+
 
