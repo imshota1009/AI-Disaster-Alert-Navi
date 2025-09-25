@@ -1,83 +1,80 @@
-# もしもの備えアプリ 🛠️ (Disaster Preparedness App)
+# 🛠️ Disaster Preparedness App
 
-このアプリは **災害時に役立つ情報をワンストップで提供** する、ブラウザベースの防災支援ツールです。  
-公開されているAPIを活用し、**地震情報・避難場所検索・防災ニュース・備蓄チェックリスト** などを1つの画面で確認できます。  
+This app is a **browser-based disaster support tool** that provides **one-stop access to essential information during emergencies**.  
+By leveraging public APIs, you can view **earthquake information, evacuation site search, disaster news, and preparedness checklists** all on a single screen.  
 
-さらに **多言語対応（日本語・英語・韓国語・中国語）** により、日本にお住まいの外国人の方々にも安心してご利用いただけます。  
+It also supports **multiple languages (Japanese, English, Korean, Chinese)**, making it useful for foreign residents in Japan.  
 
-ここから⇒https://imshota1009.github.io/AI-Disaster-Alert-Navi/
-
----
-
-## ✨ 主な機能
-
-### 1. 地震情報
-- ⏱ **リアルタイム更新**: 1分ごとに最新の地震情報を自動取得  
-- 🏠 **地域設定**: 47都道府県から設定可能（ブラウザに保存されます）  
-- 🔔 **パーソナライズ表示**: 自分の地域の地震を優先的に表示  
-- 🎨 **震度の可視化**: 揺れの強さに応じてカードの色が変わり、直感的に危険度を把握  
 
 ---
 
-### 2. 避難場所検索
-- 📍 **現在地から検索**: デバイスの位置情報を利用し、最寄りの避難場所を表示（※現在はデモデータ）  
-- 🗺️ **ルート案内**: Googleマップと連携して避難ルートを確認  
+## ✨ Key Features
+
+### 1. Earthquake Information
+- ⏱ **Real-time updates**: Automatically fetches the latest earthquake data every minute  
+- 🏠 **Regional settings**: Select from all 47 prefectures (saved in your browser)  
+- 🔔 **Personalized display**: Prioritizes earthquakes in your selected region  
+- 🎨 **Visualized intensity**: Card colors change according to seismic intensity for quick risk recognition  
 
 ---
 
-### 3. 防災ニュース
-- 📰 **最新ニュース**: NHK配信の防災・気象ニュースを一覧で確認  
-- 🔗 **公式記事リンク**: タップするとNHK公式サイトで詳細を閲覧可能  
+### 2. Evacuation Site Search
+- 📍 **Search from current location**: Uses device geolocation to display nearby evacuation sites (*demo data for now*)  
+- 🗺️ **Route guidance**: Linked with Google Maps for evacuation routes  
 
 ---
 
-### 4. 防災チェックリスト
-- 🎒 **備えの可視化**:  
-  - 非常用持ち出し袋  
-  - 自宅での備蓄  
-  の2カテゴリで必要な項目をリスト化  
-- 💾 **進捗保存**: チェック内容はブラウザに保存され、再訪時にも確認可能  
+### 3. Disaster News
+- 📰 **Latest news**: View disaster and weather news provided by NHK  
+- 🔗 **Official article links**: Tap to read full details on NHK’s official website  
 
 ---
 
-### 5. 多言語対応
-- 🌏 **4言語に対応**:  
-  - 日本語  
-  - 英語  
-  - 韓国語  
-  - 中国語（簡体字）  
-
-UIの表示をワンタップで切り替えられます。  
+### 4. Preparedness Checklist
+- 🎒 **Visualized preparedness**:  
+  - Emergency go-bag  
+  - Home stockpile  
+  Organized into two categories for easy tracking  
+- 💾 **Progress saved**: Your checklist is stored in the browser and remains available on return visits  
 
 ---
 
-## 🚀 使い方
+### 5. Multi-language Support
+- 🌏 **Available in 4 languages**:  
+  - Japanese  
+  - English  
+  - Korean  
+  - Simplified Chinese  
 
-1. **ダウンロード**  
-   リポジトリから `moshimo-sonae-app-v3.html` をダウンロード  
-
-2. **ブラウザで開く**  
-   ファイルをブラウザで開くだけで利用開始できます  
-
-3. **地域設定**  
-   「地震情報」タブを開き、ドロップダウンから都道府県を選択してください  
+Switch the UI language with a single tap.  
 
 ---
 
-## 🛠️ 使用技術・API
+## 🚀 How to Use
 
-- **フロントエンド**: HTML, JavaScript, Tailwind CSS  
-- **地震情報API**: P2P地震情報 API  
-- **ニュース**: NHKニュース RSSフィード（防災・気象）  
-- **位置情報**: ブラウザ標準 Geolocation API  
+1. **Download**  
+   Get `moshimo-sonae-app-v3.html` from the repository  
+
+2. **Open in browser**  
+   Simply open the file in any modern browser to start using the app  
+
+3. **Set your region**  
+   Go to the "Earthquake Info" tab and select your prefecture from the dropdown list  
+
+---
+
+## 🛠️ Technologies & APIs
+
+- **Frontend**: HTML, JavaScript, Tailwind CSS  
+- **Earthquake Data API**: P2P Earthquake Information API  
+- **News Feed**: NHK Disaster & Weather RSS feed  
+- **Location Services**: Browser’s built-in Geolocation API  
 
 ---
 
-## ⚠️ 注意事項
+## ⚠️ Notes
 
-- 「避難場所検索」機能で表示される避難場所は **開発用デモデータ** です。  
-  実際に避難する際は、必ず **自治体の公式情報** をご確認ください。  
+- The evacuation sites shown in the “Evacuation Site Search” feature are **demo data only**.  
+  Always check your **local government’s official information** during an actual evacuation.  
 
-- 本アプリの利用には **インターネット接続が必要** です。  
-
----
+- An **internet connection is required** to use this app.  
